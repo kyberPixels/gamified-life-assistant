@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import usersRouter from "./routes/users.routes.js";
+import questsRouter from "./routes/quests.routes.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 30097;
@@ -15,6 +16,7 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 app.use("/users", usersRouter);
+app.use("/quests", questsRouter);
 
 app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   console.error(error);

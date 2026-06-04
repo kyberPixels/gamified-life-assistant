@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, Router } from "express";
-import { authUser, createUser } from "../db/database.js";
+import { authUser, createUser, deleteUser } from "../db/database.js";
 import bcrypt from "bcrypt";
 
 const router = Router();
@@ -101,7 +101,39 @@ const registerUser = async (
   }
 };
 
+const deleteUserAccount = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.body as { userId?: number };
+
+    if (!userId) {
+      res.status(400).json({
+        success: false,
+        message: "User ID is required.",
+      });
+      return;
+    }
+
+    const queryResult = await deleteUser(userId);
+
+    if (queryResult.affectedRows === 1) {
+      res.status(200).json({
+        success: true,
+        message: "Character and account successfully deleted from the world.",
+      });
+      return;
+    }
+
+    res.status(404).json({
+      success: false,
+      message: "User not found or already deleted.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 router.post("/login", loginUser);
 router.post("/register", registerUser);
+router.delete("/delete-account", deleteUserAccount);
 
 export default router;

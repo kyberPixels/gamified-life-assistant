@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import '../styles/Dashboard.css';
 
-// 1. IMPORT LOKALNIH SLIČICA IZ TVOG FOLDERA (od 1 do 10)
 import icon1 from '../assets/icons/1.jpg';
 import icon2 from '../assets/icons/2.jpg';
 import icon3 from '../assets/icons/3.jpg';
@@ -19,7 +18,6 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // Niz sa uvezenim lokalnim ikonama
   const predefinedAvatars = [
     { id: 1, name: 'Hero 1', img: icon1 },
     { id: 2, name: 'Hero 2', img: icon2 },
@@ -33,7 +31,6 @@ export default function Dashboard() {
     { id: 10, name: 'Hero 10', img: icon10 },
   ];
 
-  // Postavljamo prvu sličicu (1.png) kao početnu
   const [currentAvatar, setCurrentAvatar] = useState(icon1);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -52,6 +49,31 @@ export default function Dashboard() {
       setUser(JSON.parse(loggedInUser));
     }
   }, [navigate]);
+
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm("WARNING: This action will permanently kill your character and erase all progress. Are you sure you want to proceed?");
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch('http://88.200.63.148:30097/users/delete-account', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert(data.message);
+        localStorage.removeItem('user');
+        navigate('/login');
+      } else {
+        alert(data.message || "Failed to delete account.");
+      }
+    } catch (err) {
+      alert("Cannot connect to backend server.");
+    }
+  };
 
   if (!user) return <p className="text-wheat">Loading Character Sheet...</p>;
 
@@ -113,13 +135,10 @@ export default function Dashboard() {
         {activeTab === 'profile' && (
           <div className="profile-layout-container">
             
-            {/* LIJEVA STRANA: CHARACTER CARD (KOCKASTI DIZAJN) */}
+            {/* LIJEVA STRANA */}
             <div className="profile-left-card">
               <div className="avatar-wrapper" onClick={() => setIsModalOpen(true)}>
-                
-                {/* Slika je sada kockasta sa debljim retro borderom */}
                 <img src={currentAvatar} alt="Hero Avatar" className="avatar-img" />
-
                 <div className="change-badge">CHANGE</div>
               </div>
 
@@ -131,6 +150,13 @@ export default function Dashboard() {
                 <p><strong>Total XP:</strong> {user.total_xp || 0} XP</p>
                 <p><strong>Scroll:</strong> {user.email}</p>
               </div>
+
+              <button 
+                onClick={handleDeleteAccount} 
+                className="retro-btn-danger"
+              >
+                💀 Kill Character 💀
+              </button>
             </div>
 
             {/* DESNA STRANA */}
@@ -138,7 +164,7 @@ export default function Dashboard() {
               <div className="urgent-quests">
                 <h4>⏳ Today's Urgent Quests</h4>
                 <ul>
-                  <li>Popij 2L vode <span className="text-powder">(10 XP)</span></li>
+                  <li>Drink 2l of Water <span className="text-powder">(10 XP)</span></li>
                 </ul>
               </div>
 
@@ -162,13 +188,11 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* MODAL ZA PREGLED I BIRAČ 10 LOKALNIH IKONA */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-box">
-            <h3 className="modal-title">Select Portrait</h3>
+            <h3 className="modal-title">Select Character</h3>
             
-            {/* Mreža sa 10 kockastih sličica */}
             <div className="avatar-grid">
               {predefinedAvatars.map((av) => (
                 <div 

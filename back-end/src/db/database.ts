@@ -36,3 +36,47 @@ export const createUser = async (
   );
   return result;
 };
+
+export const deleteUser = async (userId) => {
+  const [result] = await pool.query(
+    "DELETE FROM users WHERE id = ?",
+    [userId]
+  );
+  return result;
+};
+
+export interface QuestRow {
+  id?: number;
+  user_id: number;
+  category_id: number;
+  title: string;
+  description: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  xp_reward: number;
+  is_recurring: number; // U bazi je tinyint (0 ili 1)
+}
+
+// Funkcija za dohvaćanje svih kvestova određenog usera
+export const getUserQuestsFromDb = async (userId: number) => {
+  const [rows] = await pool.query(
+    "SELECT * FROM quests WHERE user_id = ?",
+    [userId]
+  );
+  return rows;
+};
+
+export const createQuestInDb = async (quest: QuestRow) => {
+  const [result] = await pool.query(
+    "INSERT INTO quests (user_id, category_id, title, description, difficulty, xp_reward, is_recurring) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    [quest.user_id, quest.category_id, quest.title, quest.description, quest.difficulty, quest.xp_reward, quest.is_recurring]
+  );
+  return result;
+};
+
+export const deleteQuestFromDb = async (questId: number, userId: number) => {
+  const [result] = await pool.query(
+    "DELETE FROM quests WHERE id = ? AND user_id = ?",
+    [questId, userId]
+  );
+  return result;
+};

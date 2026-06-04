@@ -7,6 +7,7 @@ export default function Quests() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [categoryId, setCategoryId] = useState(1);
   const [difficulty, setDifficulty] = useState("medium");
   const [xp, setXp] = useState(100);
   const [customXp, setCustomXp] = useState(false);
@@ -52,13 +53,15 @@ export default function Quests() {
     e.preventDefault();
     if (!title || !user) return;
 
+    const backendDifficulty = difficulty === "custom" ? "medium" : difficulty;
+
     const questData = {
       user_id: user.id,
-      category_id: 1,
+      category_id: Number(categoryId),
       title: title,
       description: description,
-      difficulty: difficulty,
-      xp_reward: xp,
+      difficulty: backendDifficulty,
+      xp_reward: Number(xp),
       is_recurring: false,
     };
 
@@ -75,8 +78,10 @@ export default function Quests() {
         fetchUserQuests(user.id);
         setTitle("");
         setDescription("");
+        setCategoryId(1);
         setDifficulty("medium");
-        setXp(50);
+        setXp(100);
+        setCustomXp(false);
       } else {
         alert(data.message || "Failed to create quest.");
       }
@@ -202,8 +207,24 @@ export default function Quests() {
             placeholder="What do you need to do?"
           />
         </div>
+
         <div className="form-flex-row">
-            <div className="form-group flex-1">
+          <div className="form-group flex-1">
+            <label>Category:</label>
+            <select
+              className="quest-input retro-select"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+            >
+              <option value="1">⚔️ General</option>
+              <option value="2">❤️ Health & Fitness</option>
+              <option value="3">📚 Study & Coding</option>
+              <option value="4">⏰ Daily Habits</option>
+              <option value="5">🎨 Hobbies & Creativity</option>
+            </select>
+          </div>
+
+          <div className="form-group flex-1">
             <label>Difficulty:</label>
             <select
               className="quest-input retro-select"
@@ -223,6 +244,7 @@ export default function Quests() {
                   setXp(200);
                 } else {
                   setCustomXp(true);
+                  setXp(100);
                 }
               }}
             >
@@ -240,35 +262,30 @@ export default function Quests() {
               </option>
             </select>
           </div>
-          <div className="form-group flex-1">
-            <label>XP Reward:</label>
-            {customXp ? (
-              <input
-                className="quest-input"
-                type="number"
-                value={xp}
-                onChange={(e) => setXp(Number(e.target.value))}
-                min="10"
-                max="500"
-                required
-              />
-            ) : (
-              <div
-                className="quest-input"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  color: getDifficultyColor(difficulty),
-                  background: "#0f172a",
-                  border: "1px solid #444",
-                }}
-              >
-                <span>{xp} XP</span>
-              </div>
-            )}
-          </div>
         </div>
+
+        <div className="form-group">
+          <label>XP Reward:</label>
+          {customXp ? (
+            <input
+              className="quest-input"
+              type="number"
+              value={xp}
+              onChange={(e) => setXp(Number(e.target.value))}
+              min="10"
+              max="500"
+              required
+            />
+          ) : (
+            <div
+              className="quest-input static-xp-display"
+              style={{ color: getDifficultyColor(difficulty) }}
+            >
+              <span>{xp} XP</span>
+            </div>
+          )}
+        </div>
+
         <button type="submit" className="quest-btn submit-quest-btn">
           Accept Quest 📜
         </button>

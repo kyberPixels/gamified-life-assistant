@@ -1,6 +1,6 @@
 import mysql, { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 
-const pool = mysql.createPool({
+export const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
@@ -53,10 +53,9 @@ export interface QuestRow {
   description: string;
   difficulty: 'easy' | 'medium' | 'hard';
   xp_reward: number;
-  is_recurring: number; // U bazi je tinyint (0 ili 1)
+  is_recurring: number;
 }
 
-// Funkcija za dohvaćanje svih kvestova određenog usera
 export const getUserQuestsFromDb = async (userId: number) => {
   const [rows] = await pool.query(
     "SELECT * FROM quests WHERE user_id = ?",

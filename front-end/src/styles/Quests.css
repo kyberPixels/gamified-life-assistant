@@ -33,9 +33,9 @@
 .quest-input {
   width: 100%;
   padding: 8px 12px;
-  font-family: 'Geo', sans-serif;
+  font-family: "Geo", sans-serif;
   font-size: 1.1rem;
-  background-color: var(--color-midnight-violet);
+  background-color: #120224;
   color: var(--color-seashell);
   border: 2px solid var(--color-powder-blue);
 }
@@ -45,8 +45,16 @@
   border-color: var(--color-wheat);
 }
 
+.static-xp-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #120224;
+  border: 2px solid var(--color-powder-blue);
+}
+
 .quest-btn {
-  font-family: 'Geo', sans-serif;
+  font-family: "Geo", sans-serif;
   background-color: var(--color-wheat);
   color: var(--color-midnight-violet);
   border: 2px solid var(--color-midnight-violet);

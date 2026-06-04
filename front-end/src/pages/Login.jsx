@@ -1,38 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import '../styles/Register.css';
+import '../styles/Login.css';
 
-export default function Register() {
+export default function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    setMessage('');
 
     try {
-      const response = await fetch('http://88.200.63.148:30097/users/register', {
+      const response = await fetch('http://88.200.63.148:30097/users/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setMessage('Hero registered! Redirecting to gates...');
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        onLoginSuccess(data.user);
+        navigate('/');
       } else {
-        setError(data.message || 'Registration failed.');
+        setError(data.message || 'Login failed.');
       }
     } catch (err) {
       setError('Cannot connect to backend server.');
@@ -42,26 +36,18 @@ export default function Register() {
   return (
     <div className="auth-wrapper">
       <div className="auth-box">
-        <h2>Hero Registration</h2>
-        {error && <p style={{ color: 'var(--color-wheat)', textAlign: 'center', marginBottom: '10px' }}>⚠️ {error}</p>}
-        {message && <p style={{ color: 'var(--color-powder-blue)', textAlign: 'center', marginBottom: '10px' }}>✨ {message}</p>}
+        <h2 style={{ textAlign: 'center', marginBottom: '5px' }}>Welcome back!</h2>
+        <p style={{ textAlign: 'center', color: 'var(--color-powder-blue)', marginBottom: '20px' }}>Gate of Login</p>
         
-        <form onSubmit={handleSubmit}>
+        {error && <p style={{ color: 'var(--color-wheat)', textAlign: 'center', marginBottom: '10px' }}>⚠️ {error}</p>}
+        
+        <form onSubmit={handleLogin}>
           <div className="input-group">
             <input 
               type="text" 
-              placeholder="Choose Character Name" 
+              placeholder="Enter Character Name" 
               value={username} 
               onChange={(e) => setUsername(e.target.value)} 
-              required 
-            />
-          </div>
-          <div className="input-group">
-            <input 
-              type="email" 
-              placeholder="email address" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
               required 
             />
           </div>
@@ -74,10 +60,13 @@ export default function Register() {
               required 
             />
           </div>
-          <button type="submit" className="auth-submit">Forge Character</button>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+            <button type="submit" className="auth-submit" style={{ flex: 1 }}>Login 🗝️</button>
+            <button type="button" className="auth-submit" style={{ flex: 1, backgroundColor: 'transparent', border: '2px solid var(--color-wheat)' }} onClick={() => navigate('/register')}>Register</button>
+          </div>
         </form>
         <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '1.1rem' }}>
-          Already have a hero? <Link to="/login" style={{ color: 'var(--color-wheat)' }}>Login here</Link>
+          Don't have an account? <Link to="/register" style={{ color: 'var(--color-wheat)' }}>Create one here</Link>
         </p>
       </div>
     </div>

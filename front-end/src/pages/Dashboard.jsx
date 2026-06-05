@@ -50,6 +50,7 @@ const getRpgTitle = (level) => {
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("home");
   const [user, setUser] = useState(null);
+  const [quests, setQuests] = useState([]);
   const navigate = useNavigate();
 
   const predefinedAvatars = [
@@ -106,7 +107,41 @@ export default function Dashboard() {
     } else {
       setUser(JSON.parse(loggedInUser));
     }
-  }, [navigate, activeTab]);
+  }, [navigate]);
+
+  const fetchUserQuests = async (userId) => {
+    try {
+      const response = await fetch(
+        `http://88.200.63.148:30097/quests?user_id=${userId}`,
+      );
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        if (data.quests.length === 0) {
+          setQuests([
+            {
+              id: "default-water",
+              title: "Drink 2l of Water",
+              description: "Hydration is key to success",
+              difficulty: "easy",
+              xp_reward: 10,
+              is_completed: false,
+            },
+          ]);
+        } else {
+          setQuests(data.quests);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching quests:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (user && activeTab === "quests") {
+      fetchUserQuests(user.id);
+    }
+  }, [activeTab, user]);
 
   const handleDeleteAccount = async () => {
     const confirmDelete = window.confirm(
@@ -136,6 +171,94 @@ export default function Dashboard() {
     } catch (err) {
       alert("Cannot connect to backend server.");
     }
+  };
+
+  const handleDeleteQuest = async (questId) => {
+    if (questId === "default-water") {
+      setQuests([]);
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to abandon this quest?",
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`http://88.200.63.148:30097/quests/delete`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questId, userId: user.id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setQuests(quests.filter((q) => q.id !== questId));
+      } else {
+        alert(data.message || "Failed to delete quest.");
+      }
+    } catch (err) {
+      alert("Error connecting to the backend server.");
+    }
+  };
+
+  const toggleQuest = async (id, currentStatus, xpReward) => {
+    if (id === "default-water") {
+      setQuests(
+        quests.map((q) =>
+          q.id === id ? { ...q, is_completed: !q.is_completed } : q,
+        ),
+      );
+      return;
+    }
+
+    const newCompletionStatus = !currentStatus;
+
+    try {
+      const response = await fetch(
+        "http://88.200.63.148:30097/quests/toggle-completion",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            questId: id,
+            userId: user.id,
+            isCompleted: newCompletionStatus,
+            xpReward: xpReward,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setQuests(
+          quests.map((q) =>
+            q.id === id ? { ...q, is_completed: newCompletionStatus } : q,
+          ),
+        );
+
+        const updatedUser = {
+          ...user,
+          total_xp: data.newXp,
+          current_level: data.newLevel,
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      } else {
+        alert(data.message || "Failed to update quest completion.");
+      }
+    } catch (err) {
+      alert("Error connecting to the backend server.");
+    }
+  };
+
+  const getDifficultyColor = (diff) => {
+    if (diff === "easy") return "#4CAF50";
+    if (diff === "medium") return "#FFC107";
+    if (diff === "hard") return "#F44336";
+    return "#2196F3";
   };
 
   if (!user) return <p className="text-wheat">Loading Character Sheet...</p>;
@@ -211,17 +334,61 @@ export default function Dashboard() {
 
         {activeTab === "quests" && (
           <div>
-            <h3>Active Quests Preview</h3>
-            <ul className="quests-list">
-              <li>
-                🔒 Complete seminar implementation{" "}
-                <span className="text-wheat">(150 XP)</span>
-              </li>
-              <li>
-                🔒 Drink 2L of water today{" "}
-                <span className="text-wheat">(10 XP)</span>
-              </li>
-            </ul>
+            <h3>Active Quests</h3>
+            <div className="quest-list">
+              {quests.length === 0 ? (
+                <p className="text-wheat">
+                  No quests yet. Head to the Quest Log to create some!
+                </p>
+              ) : (
+                quests.map((quest) => (
+                  <div
+                    key={quest.id}
+                    className={`quest-row ${quest.is_completed ? "completed" : ""}`}
+                  >
+                    <div className="quest-info">
+                      <h4>{quest.title}</h4>
+                      <p>{quest.description}</p>
+                    </div>
+
+                    <div className="quest-actions-wrapper">
+                      <div className="quest-meta-text">
+                        <span
+                          style={{ color: getDifficultyColor(quest.difficulty) }}
+                          className="difficulty-badge"
+                        >
+                          {quest.difficulty}
+                        </span>
+                        <div className="xp-payout">
+                          +{quest.xp_reward} XP
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          toggleQuest(
+                            quest.id,
+                            quest.is_completed,
+                            quest.xp_reward,
+                          )
+                        }
+                        className={`quest-btn complete-toggle-btn ${quest.is_completed ? "status-undo" : "status-complete"}`}
+                      >
+                        {quest.is_completed ? "Undo ✅" : "Complete ⚔️"}
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteQuest(quest.id)}
+                        className="quest-delete-btn"
+                        title="Abandon Quest"
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
 

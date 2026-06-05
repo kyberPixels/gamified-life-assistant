@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import "../styles/Quests.css";
 
 export default function Quests() {
-  const [quests, setQuests] = useState([]);
   const [user, setUser] = useState(null);
 
   const [title, setTitle] = useState("");
@@ -17,37 +16,8 @@ export default function Quests() {
     if (loggedInUser) {
       const parsedUser = JSON.parse(loggedInUser);
       setUser(parsedUser);
-      fetchUserQuests(parsedUser.id);
     }
   }, []);
-
-  const fetchUserQuests = async (userId) => {
-    try {
-      const response = await fetch(
-        `http://88.200.63.148:30097/quests?user_id=${userId}`,
-      );
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        if (data.quests.length === 0) {
-          setQuests([
-            {
-              id: "default-water",
-              title: "Drink 2l of Water",
-              description: "Hydration is key to success",
-              difficulty: "easy",
-              xp_reward: 10,
-              is_completed: false,
-            },
-          ]);
-        } else {
-          setQuests(data.quests);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching quests:", err);
-    }
-  };
 
   const handleAddQuest = async (e) => {
     e.preventDefault();
@@ -74,13 +44,13 @@ export default function Quests() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        fetchUserQuests(user.id);
         setTitle("");
         setDescription("");
         setCategoryId(1);
         setDifficulty("medium");
         setXp(100);
         setCustomXp(false);
+        alert("Quest created successfully!");
       } else {
         alert(data.message || "Failed to create quest.");
       }
@@ -91,7 +61,6 @@ export default function Quests() {
 
   const handleDeleteQuest = async (questId) => {
     if (questId === "default-water") {
-      setQuests([]);
       return;
     }
 
@@ -110,7 +79,7 @@ export default function Quests() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setQuests(quests.filter((q) => q.id !== questId));
+        alert("Quest deleted successfully!");
       } else {
         alert(data.message || "Failed to delete quest.");
       }
@@ -121,11 +90,6 @@ export default function Quests() {
 
   const toggleQuest = async (id, currentStatus, xpReward) => {
     if (id === "default-water") {
-      setQuests(
-        quests.map((q) =>
-          q.id === id ? { ...q, is_completed: !q.is_completed } : q,
-        ),
-      );
       return;
     }
 
@@ -149,12 +113,6 @@ export default function Quests() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setQuests(
-          quests.map((q) =>
-            q.id === id ? { ...q, is_completed: newCompletionStatus } : q,
-          ),
-        );
-
         const updatedUser = {
           ...user,
           total_xp: data.newXp,
@@ -289,49 +247,6 @@ export default function Quests() {
           Accept Quest 📜
         </button>
       </form>
-
-      <div className="quest-list">
-        {quests.map((quest) => (
-          <div
-            key={quest.id}
-            className={`quest-row ${quest.is_completed ? "completed" : ""}`}
-          >
-            <div className="quest-info">
-              <h4>{quest.title}</h4>
-              <p>{quest.description}</p>
-            </div>
-
-            <div className="quest-actions-wrapper">
-              <div className="quest-meta-text">
-                <span
-                  style={{ color: getDifficultyColor(quest.difficulty) }}
-                  className="difficulty-badge"
-                >
-                  {quest.difficulty}
-                </span>
-                <div className="xp-payout">+{quest.xp_reward} XP</div>
-              </div>
-
-              <button
-                onClick={() =>
-                  toggleQuest(quest.id, quest.is_completed, quest.xp_reward)
-                }
-                className={`quest-btn complete-toggle-btn ${quest.is_completed ? "status-undo" : "status-complete"}`}
-              >
-                {quest.is_completed ? "Undo ✅" : "Complete ⚔️"}
-              </button>
-
-              <button
-                onClick={() => handleDeleteQuest(quest.id)}
-                className="quest-delete-btn"
-                title="Abandon Quest"
-              >
-                ❌
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

@@ -47,11 +47,25 @@ const getRpgTitle = (level) => {
   return "Mythic Elite";
 };
 
+const motivationalMessages = [
+  "Forge your own destiny today, Hero!",
+  "Every quest completed is another step toward becoming a legend.",
+  "Consistency is the ultimate stat multiplier. Keep grinding!",
+  "Failure is just a temporary debuff. Get back up!",
+  "Your potential is limitless. Go unlock some achievements!",
+  "Drink some water, sharpen your blade, and conquer the day!",
+  "Even the highest level masters started as novices. Keep pushing!",
+  "The tavern will tell stories of your triumphs one day.",
+  "Focus on the grind, the rewards will follow.",
+  "A true warrior doesn't wait for luck; they create it.",
+];
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("home");
   const [user, setUser] = useState(null);
   const [quests, setQuests] = useState([]);
   const navigate = useNavigate();
+  const [randomMessage, setRandomMessage] = useState("");
 
   const predefinedAvatars = [
     { id: 1, name: "Hero 1", img: icon1 },
@@ -107,6 +121,9 @@ export default function Dashboard() {
     } else {
       setUser(JSON.parse(loggedInUser));
     }
+
+    const randomIndex = Math.floor(Math.random() * motivationalMessages.length);
+    setRandomMessage(motivationalMessages[randomIndex]);
   }, [navigate]);
 
   const fetchUserQuests = async (userId) => {
@@ -354,14 +371,14 @@ export default function Dashboard() {
                     <div className="quest-actions-wrapper">
                       <div className="quest-meta-text">
                         <span
-                          style={{ color: getDifficultyColor(quest.difficulty) }}
+                          style={{
+                            color: getDifficultyColor(quest.difficulty),
+                          }}
                           className="difficulty-badge"
                         >
                           {quest.difficulty}
                         </span>
-                        <div className="xp-payout">
-                          +{quest.xp_reward} XP
-                        </div>
+                        <div className="xp-payout">+{quest.xp_reward} XP</div>
                       </div>
 
                       <button
@@ -394,7 +411,6 @@ export default function Dashboard() {
 
         {activeTab === "profile" && (
           <div className="profile-layout-container">
-            {/* LIJEVA STRANA */}
             <div className="profile-left-card">
               <div
                 className="avatar-wrapper"
@@ -431,31 +447,37 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* DESNA STRANA */}
-            <div className="profile-right-content">
-              <div className="urgent-quests">
-                <h4>⏳ Today's Urgent Quests</h4>
-                <ul>
-                  <li>
-                    Drink 2l of Water{" "}
-                    <span className="text-powder">(10 XP)</span>
-                  </li>
-                </ul>
-              </div>
+            <div className="profile-right-scroll-wrapper">
+              <div className="profile-right-content">
+                <div className="urgent-quests">
+                  <h4>✨ Today's Motivational Message</h4>
+                  <p
+                    style={{
+                      margin: "10px 0 0 0",
+                      fontSize: "1.15rem",
+                      fontStyle: "italic",
+                      lineHeight: "1.4",
+                    }}
+                    className="text-wheat"
+                  >
+                    "{randomMessage}"
+                  </p>
+                </div>
 
-              <div>
-                <h4 className="vault-title">Vault of Achievements</h4>
-                <div className="achievements-grid">
-                  {allAchievements.map((ach) => (
-                    <div
-                      key={ach.id}
-                      title={ach.description}
-                      className={`achievement ${ach.unlocked ? "unlocked" : "locked"}`}
-                    >
-                      <div className="achievement-icon">{ach.icon}</div>
-                      <div className="achievement-title">{ach.title}</div>
-                    </div>
-                  ))}
+                <div style={{ marginTop: "20px" }}>
+                  <h4 className="vault-title">Vault of Achievements</h4>
+                  <div className="achievements-grid">
+                    {allAchievements.map((ach) => (
+                      <div
+                        key={ach.id}
+                        title={ach.description}
+                        className={`achievement ${ach.unlocked ? "unlocked" : "locked"}`}
+                      >
+                        <div className="achievement-icon">{ach.icon}</div>
+                        <div className="achievement-title">{ach.title}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

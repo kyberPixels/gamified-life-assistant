@@ -53,14 +53,13 @@ export default function Quests() {
     e.preventDefault();
     if (!title || !user) return;
 
-    const backendDifficulty = difficulty === "custom" ? "medium" : difficulty;
-
+    // SADA DIREKTNO ŠALJEMO ONO ŠTO JE SELEKTOVANO (EASY, MEDIUM, HARD ILI CUSTOM)
     const questData = {
       user_id: user.id,
       category_id: Number(categoryId),
       title: title,
       description: description,
-      difficulty: backendDifficulty,
+      difficulty: difficulty,
       xp_reward: Number(xp),
       is_recurring: false,
     };
@@ -175,7 +174,7 @@ export default function Quests() {
     if (diff === "easy") return "#4CAF50";
     if (diff === "medium") return "#FFC107";
     if (diff === "hard") return "#F44336";
-    return "#2196F3";
+    return "#2196F3"; // Plava boja za custom
   };
 
   if (!user) return <p className="text-wheat">Loading Quest Log...</p>;
@@ -273,7 +272,7 @@ export default function Quests() {
               value={xp}
               onChange={(e) => setXp(Number(e.target.value))}
               min="10"
-              max="500"
+              max="1000" // Limit je ostao na 1000 za lakše testiranje
               required
             />
           ) : (

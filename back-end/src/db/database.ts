@@ -58,8 +58,12 @@ export interface QuestRow {
 
 export const getUserQuestsFromDb = async (userId: number) => {
   const [rows] = await pool.query(
-    "SELECT * FROM quests WHERE user_id = ?",
-    [userId]
+    `SELECT q.*, 
+            IF(qc.id IS NOT NULL, 1, 0) AS is_completed 
+     FROM quests q
+     LEFT JOIN quest_completions qc ON q.id = qc.quest_id AND qc.user_id = ?
+     WHERE q.user_id = ?`,
+    [userId, userId]
   );
   return rows;
 };

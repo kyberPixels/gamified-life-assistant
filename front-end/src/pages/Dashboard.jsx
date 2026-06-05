@@ -119,7 +119,15 @@ export default function Dashboard() {
     if (!loggedInUser) {
       navigate("/login");
     } else {
-      setUser(JSON.parse(loggedInUser));
+      const parsedUser = JSON.parse(loggedInUser);
+      setUser(parsedUser);
+
+      const savedAvatar = predefinedAvatars.find(
+        (av) => av.id === (parsedUser.avatar_id || 1),
+      );
+      if (savedAvatar) {
+        setCurrentAvatar(savedAvatar.img);
+      }
     }
 
     const randomIndex = Math.floor(Math.random() * motivationalMessages.length);
@@ -271,6 +279,42 @@ export default function Dashboard() {
     }
   };
 
+  const handleAvatarChange = async (avatarId, avatarImg) => {
+    try {
+      const response = await fetch(
+        "http://88.200.63.148:30097/users/update-avatar",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            avatarId: avatarId,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setCurrentAvatar(avatarImg);
+
+        const updatedUser = {
+          ...user,
+          avatar_id: avatarId,
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+
+        setIsModalOpen(false);
+      } else {
+        alert(data.message || "Failed to update avatar in database.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error connecting to the server while updating avatar.");
+    }
+  };
+
   const getDifficultyColor = (diff) => {
     if (diff === "easy") return "#4CAF50";
     if (diff === "medium") return "#FFC107";
@@ -308,6 +352,12 @@ export default function Dashboard() {
           className={`retro-tab-btn ${activeTab === "quests" ? "active" : ""}`}
         >
           ⚔️ Active Quests
+        </button>
+        <button
+          onClick={() => setActiveTab("completed")}
+          className={`retro-tab-btn ${activeTab === "completed" ? "active" : ""}`}
+        >
+          🏆 Completed Quests
         </button>
         <button
           onClick={() => setActiveTab("profile")}
@@ -491,18 +541,21 @@ export default function Dashboard() {
             <h3 className="modal-title">Select Character</h3>
 
             <div className="avatar-grid">
-              {predefinedAvatars.map((av) => (
-                <div
-                  key={av.id}
-                  onClick={() => {
-                    setCurrentAvatar(av.img);
-                    setIsModalOpen(false);
-                  }}
-                  className={`avatar-tile ${currentAvatar === av.img ? "selected" : ""}`}
-                >
-                  <img src={av.img} alt={av.name} className="avatar-thumb" />
-                </div>
-              ))}
+              {predefinedAvatars.map((av) => {
+                const isSelected =
+                  predefinedAvatars.find((p) => p.img === currentAvatar)?.id ===
+                  av.id;
+
+                return (
+                  <div
+                    key={av.id}
+                    onClick={() => handleAvatarChange(av.id, av.img)}
+                    className={`avatar-tile ${isSelected ? "selected" : ""}`}
+                  >
+                    <img src={av.img} alt={av.name} className="avatar-thumb" />
+                  </div>
+                );
+              })}
             </div>
 
             <button

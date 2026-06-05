@@ -15,12 +15,14 @@ export interface UserLogin extends RowDataPacket {
   username: string;
   email: string;
   password_hash: string;
+  total_xp: number;
+  avatar_id: number;
 }
 
 export const authUser = async (username: string): Promise<UserLogin[]> => {
   const [rows] = await pool.query<UserLogin[]>(
     "SELECT * FROM users WHERE username = ?",
-    [username]
+    [username],
   );
   return rows;
 };
@@ -28,20 +30,17 @@ export const authUser = async (username: string): Promise<UserLogin[]> => {
 export const createUser = async (
   username: string,
   email: string,
-  passwordHash: string
+  passwordHash: string,
 ): Promise<ResultSetHeader> => {
   const [result] = await pool.query<ResultSetHeader>(
     "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-    [username, email, passwordHash]
+    [username, email, passwordHash],
   );
   return result;
 };
 
-export const deleteUser = async (userId) => {
-  const [result] = await pool.query(
-    "DELETE FROM users WHERE id = ?",
-    [userId]
-  );
+export const deleteUser = async (userId: number) => {
+  const [result] = await pool.query("DELETE FROM users WHERE id = ?", [userId]);
   return result;
 };
 
@@ -51,7 +50,7 @@ export interface QuestRow {
   category_id: number;
   title: string;
   description: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   xp_reward: number;
   is_recurring: number;
 }
@@ -63,7 +62,7 @@ export const getUserQuestsFromDb = async (userId: number) => {
      FROM quests q
      LEFT JOIN quest_completions qc ON q.id = qc.quest_id AND qc.user_id = ?
      WHERE q.user_id = ?`,
-    [userId, userId]
+    [userId, userId],
   );
   return rows;
 };
@@ -71,7 +70,15 @@ export const getUserQuestsFromDb = async (userId: number) => {
 export const createQuestInDb = async (quest: QuestRow) => {
   const [result] = await pool.query(
     "INSERT INTO quests (user_id, category_id, title, description, difficulty, xp_reward, is_recurring) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    [quest.user_id, quest.category_id, quest.title, quest.description, quest.difficulty, quest.xp_reward, quest.is_recurring]
+    [
+      quest.user_id,
+      quest.category_id,
+      quest.title,
+      quest.description,
+      quest.difficulty,
+      quest.xp_reward,
+      quest.is_recurring,
+    ],
   );
   return result;
 };
@@ -79,7 +86,15 @@ export const createQuestInDb = async (quest: QuestRow) => {
 export const deleteQuestFromDb = async (questId: number, userId: number) => {
   const [result] = await pool.query(
     "DELETE FROM quests WHERE id = ? AND user_id = ?",
-    [questId, userId]
+    [questId, userId],
+  );
+  return result;
+};
+
+export const updateAvatarInDb = async (userId: number, avatarId: number) => {
+  const [result] = await pool.query<ResultSetHeader>(
+    "UPDATE users SET avatar_id = ? WHERE id = ?",
+    [avatarId, userId],
   );
   return result;
 };

@@ -1,14 +1,15 @@
 import { Request, Response, NextFunction, Router } from "express";
-import { authUser, createUser, deleteUser } from "../db/database.js";
+import {
+  authUser,
+  createUser,
+  deleteUser,
+  updateAvatarInDb,
+} from "../db/database.js";
 import bcrypt from "bcrypt";
 
 const router = Router();
 
-const loginUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { username, password } = req.body as {
       username?: string;
@@ -35,7 +36,10 @@ const loginUser = async (
 
     const user = queryResult[0];
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password_hash);
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      user.password_hash,
+    );
 
     if (!isPasswordCorrect) {
       res.status(401).json({
@@ -52,6 +56,8 @@ const loginUser = async (
         id: user.id,
         username: user.username,
         email: user.email,
+        total_xp: user.total_xp,
+        avatar_id: user.avatar_id,
       },
     });
   } catch (error) {
@@ -62,7 +68,7 @@ const loginUser = async (
 const registerUser = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { username, email, password } = req.body as {
@@ -82,7 +88,7 @@ const registerUser = async (
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const queryResult = await createUser(username, email, hashedPassword); 
+    const queryResult = await createUser(username, email, hashedPassword);
 
     if (queryResult.affectedRows === 1) {
       res.status(201).json({
@@ -101,7 +107,11 @@ const registerUser = async (
   }
 };
 
-const deleteUserAccount = async (req: Request, res: Response, next: NextFunction) => {
+const deleteUserAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { userId } = req.body as { userId?: number };
 
@@ -132,8 +142,47 @@ const deleteUserAccount = async (req: Request, res: Response, next: NextFunction
   }
 };
 
+const updateUserAvatar = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { userId, avatarId } = req.body as {
+      userId?: number;
+      avatarId?: number;
+    };
+
+    if (!userId || !avatarId) {
+      res.status(400).json({
+        success: false,
+        message: "User ID and Avatar ID are required.",
+      });
+      return;
+    }
+
+    const queryResult = await updateAvatarInDb(userId, avatarId);
+
+    if (queryResult.affectedRows === 1) {
+      res.status(200).json({
+        success: true,
+        message: "Avatar successfully updated in the database.",
+      });
+      return;
+    }
+
+    res.status(404).json({
+      success: false,
+      message: "User not found.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 router.post("/login", loginUser);
 router.post("/register", registerUser);
+router.post("/update-avatar", updateUserAvatar);
 router.delete("/delete-account", deleteUserAccount);
 
 export default router;

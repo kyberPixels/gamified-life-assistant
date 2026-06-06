@@ -84,7 +84,6 @@ export default function Dashboard() {
   const [currentAvatar, setCurrentAvatar] = useState(icon1);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Učitavanje korisnika iz localStorage-a pri pokretanju
   useEffect(() => {
     const loggedInUser = localStorage.getItem("user");
     if (!loggedInUser) {
@@ -105,7 +104,6 @@ export default function Dashboard() {
     setRandomMessage(motivationalMessages[randomIndex]);
   }, [navigate]);
 
-  // Pametni fetch kvestova koji čuva stanje vode u localStorage-u da se ne resetuje
   const fetchUserQuests = async (userId) => {
     try {
       const response = await fetch(
@@ -114,7 +112,6 @@ export default function Dashboard() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Provjeravamo da li u localStorage već imamo zapamćeno stanje za vodu (da li je završena)
         const waterStorageKey = `water_completed_${userId}`;
         const isWaterCompletedInStorage = localStorage.getItem(waterStorageKey) === "true";
 
@@ -124,7 +121,7 @@ export default function Dashboard() {
           description: "Hydration is key to success",
           difficulty: "easy",
           xp_reward: 10,
-          is_completed: isWaterCompletedInStorage, // Vuče stvarno stanje, a ne uvijek false!
+          is_completed: isWaterCompletedInStorage,
         };
 
         const hasWater = data.quests.some(
@@ -202,35 +199,9 @@ export default function Dashboard() {
     }
   };
 
-  // Logika za završavanje/poništavanje kvestova
   const toggleQuest = async (id, currentStatus, xpReward) => {
     const newCompletionStatus = !currentStatus;
 
-    // SPECIJALNI TRETMAN ZA VODU: Sve rješavamo lokalno i sigurno
-    if (id === "default-water") {
-      // 1. Sačuvaj stanje završetka vode u localStorage za ovog korisnika
-      localStorage.setItem(`water_completed_${user.id}`, String(newCompletionStatus));
-
-      // 2. Osvježi stanje u kvestovima na ekranu
-      setQuests(
-        quests.map((q) =>
-          q.id === id ? { ...q, is_completed: newCompletionStatus } : q
-        )
-      );
-
-      // 3. Izračunaj novi XP lokalno na frontendu (+10 ako završiš, -10 ako poništiš)
-      const xpChange = newCompletionStatus ? xpReward : -xpReward;
-      const updatedUser = {
-        ...user,
-        total_xp: Math.max(0, (user.total_xp || 0) + xpChange),
-      };
-
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
-      return; // Zaustavi izvršavanje ovdje, ne šalji zahtjev na backend!
-    }
-
-    // REGULARNI KVESTOVI: Idu normalno na backend
     try {
       const response = await fetch(
         "http://88.200.63.148:30097/quests/toggle-completion",
@@ -249,6 +220,10 @@ export default function Dashboard() {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        if (id === "default-water") {
+          localStorage.setItem(`water_completed_${user.id}`, String(newCompletionStatus));
+        }
+
         setQuests(
           quests.map((q) =>
             q.id === id ? { ...q, is_completed: newCompletionStatus } : q,

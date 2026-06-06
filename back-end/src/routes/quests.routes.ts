@@ -215,7 +215,7 @@ const toggleQuestCompletion = async (
       const jucer = jucerObj.toISOString().split("T")[0];
 
       const [userRows]: any = await pool.query(
-        "SELECT streak_count, last_activity_date FROM users WHERE id = ?",
+        "SELECT streak_count, last_activity_date, total_xp, current_level FROM users WHERE id = ?",
         [Number(userId)],
       );
       const currentUser = userRows[0];
@@ -235,15 +235,24 @@ const toggleQuestCompletion = async (
         newStreak = 1;
       }
 
+      let checkXp = currentUser.total_xp;
+      let calculatedLevel = 1;
+      let xpNeeded = 100;
+      while (checkXp >= xpNeeded) {
+        checkXp -= xpNeeded;
+        calculatedLevel++;
+        xpNeeded += 100;
+      }
+
       await pool.query(
-        "UPDATE users SET streak_count = ?, last_activity_date = ? WHERE id = ?",
-        [newStreak, danas, Number(userId)],
+        "UPDATE users SET streak_count = ?, last_activity_date = ?, current_level = ? WHERE id = ?",
+        [newStreak, danas, calculatedLevel, Number(userId)],
       );
 
       if (isWaterQuest) {
         await pool.query(
           "INSERT IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 1)",
-          [Number(userId)]
+          [Number(userId), 1]
         );
       } else {
         const [questCatRows]: any = await pool.query(
@@ -270,18 +279,31 @@ const toggleQuestCompletion = async (
       );
 
       const [userRows]: any = await pool.query(
-        "SELECT streak_count FROM users WHERE id = ?",
+        "SELECT total_xp, current_level FROM users WHERE id = ?",
         [Number(userId)],
       );
-      newStreak = userRows[0].streak_count || 0;
+      
+      let checkXp = userRows[0].total_xp;
+      let calculatedLevel = 1;
+      let xpNeeded = 100;
+      while (checkXp >= xpNeeded) {
+        checkXp -= xpNeeded;
+        calculatedLevel++;
+        xpNeeded += 100;
+      }
+
+      await pool.query(
+        "UPDATE users SET current_level = ? WHERE id = ?",
+        [calculatedLevel, Number(userId)]
+      );
     }
 
-    const [userRows]: any = await pool.query(
+    const [finalUserRows]: any = await pool.query(
       "SELECT total_xp, current_level, streak_count FROM users WHERE id = ?",
       [Number(userId)],
     );
 
-    const updatedUser = userRows[0];
+    const updatedUser = finalUserRows[0];
 
     res.status(200).json({
       success: true,

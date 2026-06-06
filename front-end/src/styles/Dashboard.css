@@ -215,12 +215,12 @@
 .achievement {
   background: #120224;
   padding: 12px;
-  border-radius: 6px;
-  border: 1px solid #333;
+  border: 3px solid var(--color-wheat);
   text-align: center;
   transition: all 0.3s ease;
 }
 .achievement.unlocked {
+  background: linear-gradient(#2a834c, var(--color-blue));
   filter: none;
   opacity: 1;
 }
@@ -229,12 +229,11 @@
   opacity: 0.4;
 }
 .achievement-icon {
-  font-size: 2rem;
+  font-size: 1rem;
   margin-bottom: 5px;
 }
 .achievement-title {
-  font-size: 0.9rem;
-  font-weight: bold;
+  font-size: 1.1rem;
   color: white;
 }
 

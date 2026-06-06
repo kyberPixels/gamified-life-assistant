@@ -8,6 +8,75 @@ import { pool } from "../db/database.js";
 
 const router = Router();
 
+const checkAndUnlockAchievements = async (userId: number, currentCategoryName?: string) => {
+  try {
+    const [totalRows]: any = await pool.query(
+      "SELECT COUNT(*) as count FROM quest_completions WHERE user_id = ?",
+      [userId]
+    );
+    const totalCompleted = totalRows[0].count;
+
+    let categoryCompleted = 0;
+    if (currentCategoryName) {
+      const [catRows]: any = await pool.query(
+        `SELECT COUNT(*) as count 
+         FROM quest_completions qc
+         JOIN quests q ON qc.quest_id = q.id
+         JOIN categories c ON q.category_id = c.id
+         WHERE qc.user_id = ? AND c.name = ?`,
+        [userId, currentCategoryName]
+      );
+      categoryCompleted = catRows[0].count;
+    }
+
+    const [userRows]: any = await pool.query(
+      "SELECT current_level FROM users WHERE id = ?",
+      [userId]
+    );
+    const currentLevel = userRows[0].current_level;
+
+    const [lockedAchievements]: any = await pool.query(
+      `SELECT * FROM achievements 
+       WHERE id NOT IN (
+         SELECT achievement_id FROM user_achievements WHERE user_id = ?
+       )`,
+      [userId]
+    );
+
+    for (const ach of lockedAchievements) {
+      let shouldUnlock = false;
+
+      switch (ach.requirement_type) {
+        case 'total_quests':
+          if (totalCompleted >= ach.requirement_value) shouldUnlock = true;
+          break;
+
+        case 'category_quests':
+          if (currentCategoryName === ach.category_name && categoryCompleted >= ach.requirement_value) {
+            shouldUnlock = true;
+          }
+          break;
+
+        case 'level':
+          if (currentLevel >= ach.requirement_value) shouldUnlock = true;
+          break;
+
+        default:
+          break;
+      }
+
+      if (shouldUnlock) {
+        await pool.query(
+          "INSERT IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, ?)",
+          [userId, ach.id]
+        );
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 const getQuests = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = Number(req.query.user_id);
@@ -122,12 +191,15 @@ const toggleQuestCompletion = async (
       return;
     }
 
+    let isWaterQuest = questId === "default-water";
+    let dbQuestId = isWaterQuest ? 1 : Number(questId);
+
     let newStreak = 0;
 
     if (isCompleted) {
       await pool.query(
         "INSERT INTO quest_completions (user_id, quest_id, completed_at) VALUES (?, ?, NOW())",
-        [Number(userId), Number(questId)],
+        [Number(userId), dbQuestId],
       );
 
       await pool.query(
@@ -167,11 +239,27 @@ const toggleQuestCompletion = async (
         "UPDATE users SET streak_count = ?, last_activity_date = ? WHERE id = ?",
         [newStreak, danas, Number(userId)],
       );
+
+      if (isWaterQuest) {
+        await pool.query(
+          "INSERT IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 1)",
+          [Number(userId)]
+        );
+      } else {
+        const [questCatRows]: any = await pool.query(
+          `SELECT c.name FROM quests q 
+           JOIN categories c ON q.category_id = c.id 
+           WHERE q.id = ?`,
+          [dbQuestId]
+        );
+        
+        const categoryName = questCatRows[0]?.name;
+        await checkAndUnlockAchievements(Number(userId), categoryName);
+      }
     } else {
-      //ako user klikne undo
       await pool.query(
         "DELETE FROM quest_completions WHERE user_id = ? AND quest_id = ?",
-        [Number(userId), Number(questId)],
+        [Number(userId), dbQuestId],
       );
 
       await pool.query(
@@ -205,9 +293,34 @@ const toggleQuestCompletion = async (
   }
 };
 
+const getUserAchievements = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = Number(req.params.userId);
+
+    const [rows]: any = await pool.query(
+      `SELECT 
+        a.id, 
+        a.title, 
+        a.description, 
+        a.badge_name,
+        CASE WHEN ua.unlocked_at IS NOT NULL THEN 1 ELSE 0 END as unlocked,
+        ua.unlocked_at
+       FROM achievements a
+       LEFT JOIN user_achievements ua ON a.id = ua.achievement_id AND ua.user_id = ?
+       ORDER BY a.id ASC`,
+      [userId]
+    );
+
+    res.status(200).json({ success: true, achievements: rows });
+  } catch (error) {
+    next(error);
+  }
+};
+
 router.get("/", getQuests);
 router.post("/create", createQuest);
 router.delete("/delete", deleteQuest);
 router.post("/toggle-completion", toggleQuestCompletion);
+router.get("/:userId/achievements", getUserAchievements);
 
 export default router;

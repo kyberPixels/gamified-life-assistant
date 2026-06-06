@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import "../styles/Dashboard.css";
+import Achievements from "../pages/Achievements";
 
 import icon1 from "../assets/icons/1.jpg";
 import icon2 from "../assets/icons/2.jpg";
@@ -162,7 +163,6 @@ export default function Dashboard() {
     }
   };
 
-  // Učitan ruter reaguje sada i na prelazak u 'completed' tab
   useEffect(() => {
     if (user && (activeTab === "quests" || activeTab === "completed")) {
       fetchUserQuests(user.id);
@@ -329,7 +329,6 @@ export default function Dashboard() {
   const levelData = calculateLevelData(totalXp);
   const rpgTitle = getRpgTitle(levelData.level);
 
-  // Filtrirani nizovi za lakše upravljanje praznim stanjima
   const activeQuests = quests.filter((q) => !q.is_completed);
   const completedQuests = quests.filter((q) => q.is_completed);
 
@@ -563,9 +562,6 @@ export default function Dashboard() {
                   <strong>Total XP:</strong> {totalXp} XP
                 </p>
                 <p>
-                  <strong>Current Streak:</strong> 🔥 {user.streak_count || 0} Days
-                </p>
-                <p>
                   <strong>Scroll:</strong> {user.email}
                 </p>
               </div>
@@ -580,20 +576,12 @@ export default function Dashboard() {
 
             <div className="profile-right-scroll-wrapper">
               <div className="profile-right-content">
-                  <div style={{ marginTop: "20px" }}>
+                <div style={{ marginTop: "20px" }}>
                   <h4 className="vault-title">Vault of Achievements</h4>
-                  <div className="achievements-grid">
-                    {allAchievements.map((ach) => (
-                      <div
-                        key={ach.id}
-                        title={ach.description}
-                        className={`achievement ${ach.unlocked ? "unlocked" : "locked"}`}
-                      >
-                        <div className="achievement-icon">{ach.icon}</div>
-                        <div className="achievement-title">{ach.title}</div>
-                      </div>
-                    ))}
-                  </div>
+                  
+                  {/* OVDJE PROSLEĐUJEMO USER ID IZ TVOG STATE-A */}
+                  <Achievements userId={user.id} />
+                  
                 </div>
               </div>
             </div>

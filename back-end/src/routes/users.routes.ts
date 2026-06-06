@@ -5,6 +5,7 @@ import {
   deleteUser,
   updateAvatarInDb,
 } from "../db/database.js";
+import { pool } from "../db/database.js";
 import bcrypt from "bcrypt";
 
 const router = Router();
@@ -164,6 +165,13 @@ const updateUserAvatar = async (
     const queryResult = await updateAvatarInDb(userId, avatarId);
 
     if (queryResult.affectedRows === 1) {
+      if (Number(avatarId) === 5) {
+        await pool.query(
+          "INSERT IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 2)",
+          [Number(userId)],
+        );
+      }
+
       res.status(200).json({
         success: true,
         message: "Avatar successfully updated in the database.",

@@ -84,37 +84,7 @@ export default function Dashboard() {
   const [currentAvatar, setCurrentAvatar] = useState(icon1);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const allAchievements = [
-    {
-      id: 1,
-      title: "First Blood",
-      description: "Complete your first ever quest",
-      icon: "🥇",
-      unlocked: true,
-    },
-    {
-      id: 2,
-      title: "Hydration God",
-      description: "Complete the Water quest 5 times",
-      icon: "💧",
-      unlocked: true,
-    },
-    {
-      id: 3,
-      title: "Database Architect",
-      description: "Create all normalized tables",
-      icon: "💾",
-      unlocked: false,
-    },
-    {
-      id: 4,
-      title: "Max Level Hero",
-      description: "Reach Level 10",
-      icon: "👑",
-      unlocked: false,
-    },
-  ];
-
+  // Učitavanje korisnika iz localStorage-a pri pokretanju
   useEffect(() => {
     const loggedInUser = localStorage.getItem("user");
     if (!loggedInUser) {
@@ -135,6 +105,7 @@ export default function Dashboard() {
     setRandomMessage(motivationalMessages[randomIndex]);
   }, [navigate]);
 
+  // Pametni fetch kvestova koji čuva stanje vode u localStorage-u da se ne resetuje
   const fetchUserQuests = async (userId) => {
     try {
       const response = await fetch(
@@ -143,20 +114,24 @@ export default function Dashboard() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        if (data.quests.length === 0) {
-          setQuests([
-            {
-              id: "default-water",
-              title: "Drink 2l of Water",
-              description: "Hydration is key to success",
-              difficulty: "easy",
-              xp_reward: 10,
-              is_completed: false,
-            },
-          ]);
-        } else {
-          setQuests(data.quests);
-        }
+        // Provjeravamo da li u localStorage već imamo zapamćeno stanje za vodu (da li je završena)
+        const waterStorageKey = `water_completed_${userId}`;
+        const isWaterCompletedInStorage = localStorage.getItem(waterStorageKey) === "true";
+
+        const defaultWater = {
+          id: "default-water",
+          title: "Drink 2l of Water",
+          description: "Hydration is key to success",
+          difficulty: "easy",
+          xp_reward: 10,
+          is_completed: isWaterCompletedInStorage, // Vuče stvarno stanje, a ne uvijek false!
+        };
+
+        const hasWater = data.quests.some(
+          (q) => q.id === "default-water" || q.title === "Drink 2l of Water"
+        );
+
+        setQuests(hasWater ? data.quests : [defaultWater, ...data.quests]);
       }
     } catch (err) {
       console.error("Error fetching quests:", err);
@@ -190,6 +165,7 @@ export default function Dashboard() {
       if (response.ok && data.success) {
         alert(data.message);
         localStorage.removeItem("user");
+        localStorage.removeItem(`water_completed_${user.id}`);
         navigate("/login");
       } else {
         alert(data.message || "Failed to delete account.");
@@ -200,10 +176,7 @@ export default function Dashboard() {
   };
 
   const handleDeleteQuest = async (questId) => {
-    if (questId === "default-water") {
-      setQuests([]);
-      return;
-    }
+    if (questId === "default-water") return;
 
     const confirmDelete = window.confirm(
       "Are you sure you want to abandon this quest?",
@@ -229,18 +202,35 @@ export default function Dashboard() {
     }
   };
 
+  // Logika za završavanje/poništavanje kvestova
   const toggleQuest = async (id, currentStatus, xpReward) => {
-    if (id === "default-water") {
-      setQuests(
-        quests.map((q) =>
-          q.id === id ? { ...q, is_completed: !q.is_completed } : q,
-        ),
-      );
-      return;
-    }
-
     const newCompletionStatus = !currentStatus;
 
+    // SPECIJALNI TRETMAN ZA VODU: Sve rješavamo lokalno i sigurno
+    if (id === "default-water") {
+      // 1. Sačuvaj stanje završetka vode u localStorage za ovog korisnika
+      localStorage.setItem(`water_completed_${user.id}`, String(newCompletionStatus));
+
+      // 2. Osvježi stanje u kvestovima na ekranu
+      setQuests(
+        quests.map((q) =>
+          q.id === id ? { ...q, is_completed: newCompletionStatus } : q
+        )
+      );
+
+      // 3. Izračunaj novi XP lokalno na frontendu (+10 ako završiš, -10 ako poništiš)
+      const xpChange = newCompletionStatus ? xpReward : -xpReward;
+      const updatedUser = {
+        ...user,
+        total_xp: Math.max(0, (user.total_xp || 0) + xpChange),
+      };
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      return; // Zaustavi izvršavanje ovdje, ne šalji zahtjev na backend!
+    }
+
+    // REGULARNI KVESTOVI: Idu normalno na backend
     try {
       const response = await fetch(
         "http://88.200.63.148:30097/quests/toggle-completion",
@@ -269,6 +259,8 @@ export default function Dashboard() {
           ...user,
           total_xp: data.newXp,
           current_level: data.newLevel,
+          streak_count:
+            data.newStreak !== undefined ? data.newStreak : user.streak_count,
         };
         localStorage.setItem("user", JSON.stringify(updatedUser));
         setUser(updatedUser);
@@ -402,7 +394,7 @@ export default function Dashboard() {
               </div>
               <div className="dashboard-card">
                 <h3>STREAK</h3>
-                <p>🔥 {user.streak_count || 0} Days</p> 
+                <p>🔥 {user.streak_count || 0} Days</p>
               </div>
             </div>
           </div>
@@ -578,10 +570,7 @@ export default function Dashboard() {
               <div className="profile-right-content">
                 <div style={{ marginTop: "20px" }}>
                   <h4 className="vault-title">Vault of Achievements</h4>
-                  
-                  {/* OVDJE PROSLEĐUJEMO USER ID IZ TVOG STATE-A */}
                   <Achievements userId={user.id} />
-                  
                 </div>
               </div>
             </div>

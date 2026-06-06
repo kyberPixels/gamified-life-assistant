@@ -23,7 +23,6 @@ export default function Quests() {
     e.preventDefault();
     if (!title || !user) return;
 
-    // SADA DIREKTNO ŠALJEMO ONO ŠTO JE SELEKTOVANO (EASY, MEDIUM, HARD ILI CUSTOM)
     const questData = {
       user_id: user.id,
       category_id: Number(categoryId),
@@ -59,80 +58,11 @@ export default function Quests() {
     }
   };
 
-  const handleDeleteQuest = async (questId) => {
-    if (questId === "default-water") {
-      return;
-    }
-
-    const confirmDelete = window.confirm(
-      "Are you sure you want to abandon this quest?",
-    );
-    if (!confirmDelete) return;
-
-    try {
-      const response = await fetch(`http://88.200.63.148:30097/quests/delete`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questId, userId: user.id }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        alert("Quest deleted successfully!");
-      } else {
-        alert(data.message || "Failed to delete quest.");
-      }
-    } catch (err) {
-      alert("Error connecting to the backend server.");
-    }
-  };
-
-  const toggleQuest = async (id, currentStatus, xpReward) => {
-    if (id === "default-water") {
-      return;
-    }
-
-    const newCompletionStatus = !currentStatus;
-
-    try {
-      const response = await fetch(
-        "http://88.200.63.148:30097/quests/toggle-completion",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            questId: id,
-            userId: user.id,
-            isCompleted: newCompletionStatus,
-            xpReward: xpReward,
-          }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        const updatedUser = {
-          ...user,
-          total_xp: data.newXp,
-          current_level: data.newLevel,
-        };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      } else {
-        alert(data.message || "Failed to update quest completion.");
-      }
-    } catch (err) {
-      alert("Error connecting to the backend server.");
-    }
-  };
-
   const getDifficultyColor = (diff) => {
     if (diff === "easy") return "#4CAF50";
     if (diff === "medium") return "#FFC107";
     if (diff === "hard") return "#F44336";
-    return "#2196F3"; // Plava boja za custom
+    return "#2196F3";
   };
 
   if (!user) return <p className="text-wheat">Loading Quest Log...</p>;
@@ -143,6 +73,7 @@ export default function Quests() {
 
       <form onSubmit={handleAddQuest} className="quest-form">
         <h3>Create New Quest</h3>
+        
         <div className="form-group">
           <label>Quest Title:</label>
           <input
@@ -154,6 +85,7 @@ export default function Quests() {
             required
           />
         </div>
+
         <div className="form-group">
           <label>Description:</label>
           <input
@@ -205,18 +137,10 @@ export default function Quests() {
                 }
               }}
             >
-              <option value="easy" style={{ color: "#4CAF50" }}>
-                Easy
-              </option>
-              <option value="medium" style={{ color: "#FFC107" }}>
-                Medium
-              </option>
-              <option value="hard" style={{ color: "#F44336" }}>
-                Hard
-              </option>
-              <option value="custom" style={{ color: "#2196F3" }}>
-                Custom
-              </option>
+              <option value="easy" style={{ color: "#4CAF50" }}>Easy</option>
+              <option value="medium" style={{ color: "#FFC107" }}>Medium</option>
+              <option value="hard" style={{ color: "#F44336" }}>Hard</option>
+              <option value="custom" style={{ color: "#2196F3" }}>Custom</option>
             </select>
           </div>
         </div>
@@ -226,16 +150,17 @@ export default function Quests() {
           {customXp ? (
             <input
               className="quest-input"
+              style={{ color: getDifficultyColor(difficulty) }}
               type="number"
               value={xp}
               onChange={(e) => setXp(Number(e.target.value))}
               min="10"
-              max="1000" // Limit je ostao na 1000 za lakše testiranje
+              max="1000"
               required
             />
           ) : (
-            <div
-              className="quest-input static-xp-display"
+            <div 
+              className="quest-input static-xp-display" 
               style={{ color: getDifficultyColor(difficulty) }}
             >
               <span>{xp} XP</span>

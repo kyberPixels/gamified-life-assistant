@@ -192,15 +192,15 @@ const toggleQuestCompletion = async (
     }
 
     let isWaterQuest = questId === "default-water";
-    let dbQuestId = isWaterQuest ? 1 : Number(questId);
-
     let newStreak = 0;
 
     if (isCompleted) {
-      await pool.query(
-        "INSERT INTO quest_completions (user_id, quest_id, completed_at) VALUES (?, ?, NOW())",
-        [Number(userId), dbQuestId],
-      );
+      if (!isWaterQuest) {
+        await pool.query(
+          "INSERT INTO quest_completions (user_id, quest_id, completed_at) VALUES (?, ?, NOW())",
+          [Number(userId), Number(questId)],
+        );
+      }
 
       await pool.query(
         "UPDATE users SET total_xp = total_xp + ? WHERE id = ?",
@@ -250,17 +250,19 @@ const toggleQuestCompletion = async (
           `SELECT c.name FROM quests q 
            JOIN categories c ON q.category_id = c.id 
            WHERE q.id = ?`,
-          [dbQuestId]
+          [Number(questId)]
         );
         
         const categoryName = questCatRows[0]?.name;
         await checkAndUnlockAchievements(Number(userId), categoryName);
       }
     } else {
-      await pool.query(
-        "DELETE FROM quest_completions WHERE user_id = ? AND quest_id = ?",
-        [Number(userId), dbQuestId],
-      );
+      if (!isWaterQuest) {
+        await pool.query(
+          "DELETE FROM quest_completions WHERE user_id = ? AND quest_id = ?",
+          [Number(userId), Number(questId)],
+        );
+      }
 
       await pool.query(
         "UPDATE users SET total_xp = GREATEST(0, total_xp - ?) WHERE id = ?",

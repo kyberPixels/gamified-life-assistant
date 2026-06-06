@@ -336,7 +336,12 @@ export default function Dashboard() {
   return (
     <div>
       <div className="dashboard-header">
-        <h1>Hero Dashboard</h1>
+        <h1>
+          Hero Dashboard
+          {randomMessage && (
+            <span className="dashboard-motivation">({randomMessage})</span>
+          )}
+        </h1>
         <div>
           <span>
             Welcome, <strong className="text-wheat">{user.username}</strong>
@@ -575,22 +580,7 @@ export default function Dashboard() {
 
             <div className="profile-right-scroll-wrapper">
               <div className="profile-right-content">
-                <div className="urgent-quests">
-                  <h4>✨ Today's Motivational Message</h4>
-                  <p
-                    style={{
-                      margin: "10px 0 0 0",
-                      fontSize: "1.15rem",
-                      fontStyle: "italic",
-                      lineHeight: "1.4",
-                    }}
-                    className="text-wheat"
-                  >
-                    "{randomMessage}"
-                  </p>
-                </div>
-
-                <div style={{ marginTop: "20px" }}>
+                  <div style={{ marginTop: "20px" }}>
                   <h4 className="vault-title">Vault of Achievements</h4>
                   <div className="achievements-grid">
                     {allAchievements.map((ach) => (

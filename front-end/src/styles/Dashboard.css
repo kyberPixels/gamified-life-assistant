@@ -68,6 +68,14 @@
   color: var(--color-wheat);
 }
 
+.dashboard-motivation {
+  color: var(--color-aquamarine);
+  font-size: 1rem;
+  font-style: italic;
+  margin-left: 12px;
+  font-weight: 400;
+}
+
 .text-wheat {
   color: var(--color-wheat);
 }

@@ -44,13 +44,13 @@ function App() {
               </Link>
             </nav>
           </div>
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <button onClick={handleLogout} className="logout-btn" style={{ padding: '6px 12px', fontSize: '0.9rem', cursor: 'pointer' }}>
+          <div className="sidebar-footer">
+            <button onClick={handleLogout} className="logout-btn">
               Logout 🚪
             </button>
-          </div>
-          <div style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--color-powder-blue)' }}>
-            v1.0.0 MVP
+            <div className="version-info">
+              v1.0.0 MVP
+            </div>
           </div>
         </aside>
       )}

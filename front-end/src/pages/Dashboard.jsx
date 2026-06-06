@@ -162,8 +162,9 @@ export default function Dashboard() {
     }
   };
 
+  // Učitan ruter reaguje sada i na prelazak u 'completed' tab
   useEffect(() => {
-    if (user && activeTab === "quests") {
+    if (user && (activeTab === "quests" || activeTab === "completed")) {
       fetchUserQuests(user.id);
     }
   }, [activeTab, user]);
@@ -328,6 +329,10 @@ export default function Dashboard() {
   const levelData = calculateLevelData(totalXp);
   const rpgTitle = getRpgTitle(levelData.level);
 
+  // Filtrirani nizovi za lakše upravljanje praznim stanjima
+  const activeQuests = quests.filter((q) => !q.is_completed);
+  const completedQuests = quests.filter((q) => q.is_completed);
+
   return (
     <div>
       <div className="dashboard-header">
@@ -393,7 +398,7 @@ export default function Dashboard() {
               </div>
               <div className="dashboard-card">
                 <h3>STREAK</h3>
-                <p>🔥 3 Days</p>
+                <p>🔥 {user.streak_count || 0} Days</p> 
               </div>
             </div>
           </div>
@@ -403,16 +408,24 @@ export default function Dashboard() {
           <div>
             <h3>Active Quests</h3>
             <div className="quest-list">
-              {quests.length === 0 ? (
-                <p className="text-wheat">
-                  No quests yet. Head to the Quest Log to create some!
-                </p>
-              ) : (
-                quests.map((quest) => (
-                  <div
-                    key={quest.id}
-                    className={`quest-row ${quest.is_completed ? "completed" : ""}`}
+              {activeQuests.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 10px" }}>
+                  <p
+                    className="text-wheat"
+                    style={{
+                      fontSize: "1.25rem",
+                      fontStyle: "italic",
+                      lineHeight: "1.6",
+                    }}
                   >
+                    ⚔️ All quests cleared! Your quest log is empty. <br />
+                    Head over to the Quest Log to create new challenges and
+                    start conquering! ⚔️
+                  </p>
+                </div>
+              ) : (
+                activeQuests.map((quest) => (
+                  <div key={quest.id} className="quest-row">
                     <div className="quest-info">
                       <h4>{quest.title}</h4>
                       <p>{quest.description}</p>
@@ -439,9 +452,9 @@ export default function Dashboard() {
                             quest.xp_reward,
                           )
                         }
-                        className={`quest-btn complete-toggle-btn ${quest.is_completed ? "status-undo" : "status-complete"}`}
+                        className="quest-btn complete-toggle-btn status-complete"
                       >
-                        {quest.is_completed ? "Undo ✅" : "Complete ⚔️"}
+                        Complete ⚔️
                       </button>
 
                       <button
@@ -450,6 +463,66 @@ export default function Dashboard() {
                         title="Abandon Quest"
                       >
                         ❌
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "completed" && (
+          <div>
+            <h3>Completed Quests</h3>
+            <div className="quest-list">
+              {completedQuests.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 10px" }}>
+                  <p
+                    className="text-wheat"
+                    style={{
+                      fontSize: "1.25rem",
+                      fontStyle: "italic",
+                      lineHeight: "1.6",
+                    }}
+                  >
+                    🏆 Your Hall of Fame is currently empty. <br />
+                    Complete some active quests to fill up your archive of
+                    achievements! 🏆
+                  </p>
+                </div>
+              ) : (
+                completedQuests.map((quest) => (
+                  <div key={quest.id} className="quest-row completed">
+                    <div className="quest-info">
+                      <h4>{quest.title}</h4>
+                      <p>{quest.description}</p>
+                    </div>
+
+                    <div className="quest-actions-wrapper">
+                      <div className="quest-meta-text" style={{ opacity: 0.7 }}>
+                        <span
+                          style={{
+                            color: getDifficultyColor(quest.difficulty),
+                          }}
+                          className="difficulty-badge"
+                        >
+                          {quest.difficulty}
+                        </span>
+                        <div className="xp-payout">+{quest.xp_reward} XP</div>
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          toggleQuest(
+                            quest.id,
+                            quest.is_completed,
+                            quest.xp_reward,
+                          )
+                        }
+                        className="quest-btn complete-toggle-btn status-undo"
+                      >
+                        Undo ✅
                       </button>
                     </div>
                   </div>
@@ -483,6 +556,9 @@ export default function Dashboard() {
                 </p>
                 <p>
                   <strong>Total XP:</strong> {totalXp} XP
+                </p>
+                <p>
+                  <strong>Current Streak:</strong> 🔥 {user.streak_count || 0} Days
                 </p>
                 <p>
                   <strong>Scroll:</strong> {user.email}

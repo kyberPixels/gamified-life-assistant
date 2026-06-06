@@ -122,6 +122,8 @@ const toggleQuestCompletion = async (
       return;
     }
 
+    let newStreak = 0;
+
     if (isCompleted) {
       await pool.query(
         "INSERT INTO quest_completions (user_id, quest_id, completed_at) VALUES (?, ?, NOW())",
@@ -132,7 +134,41 @@ const toggleQuestCompletion = async (
         "UPDATE users SET total_xp = total_xp + ? WHERE id = ?",
         [Number(xpReward), Number(userId)],
       );
+
+      const danasObj = new Date();
+      const danas = danasObj.toISOString().split("T")[0];
+
+      const jucerObj = new Date();
+      jucerObj.setDate(jucerObj.getDate() - 1);
+      const jucer = jucerObj.toISOString().split("T")[0];
+
+      const [userRows]: any = await pool.query(
+        "SELECT streak_count, last_activity_date FROM users WHERE id = ?",
+        [Number(userId)],
+      );
+      const currentUser = userRows[0];
+
+      let currentStreak = currentUser.streak_count || 0;
+      let lastActivity = currentUser.last_activity_date;
+
+      if (lastActivity instanceof Date) {
+        lastActivity = lastActivity.toISOString().split("T")[0];
+      }
+
+      if (lastActivity === danas) {
+        newStreak = currentStreak;
+      } else if (lastActivity === jucer) {
+        newStreak = currentStreak + 1;
+      } else {
+        newStreak = 1;
+      }
+
+      await pool.query(
+        "UPDATE users SET streak_count = ?, last_activity_date = ? WHERE id = ?",
+        [newStreak, danas, Number(userId)],
+      );
     } else {
+      //ako user klikne undo
       await pool.query(
         "DELETE FROM quest_completions WHERE user_id = ? AND quest_id = ?",
         [Number(userId), Number(questId)],
@@ -142,10 +178,16 @@ const toggleQuestCompletion = async (
         "UPDATE users SET total_xp = GREATEST(0, total_xp - ?) WHERE id = ?",
         [Number(xpReward), Number(userId)],
       );
+
+      const [userRows]: any = await pool.query(
+        "SELECT streak_count FROM users WHERE id = ?",
+        [Number(userId)],
+      );
+      newStreak = userRows[0].streak_count || 0;
     }
 
     const [userRows]: any = await pool.query(
-      "SELECT total_xp, current_level FROM users WHERE id = ?",
+      "SELECT total_xp, current_level, streak_count FROM users WHERE id = ?",
       [Number(userId)],
     );
 
@@ -156,6 +198,7 @@ const toggleQuestCompletion = async (
       message: isCompleted ? "Quest completed!" : "Quest uncompleted.",
       newXp: updatedUser.total_xp,
       newLevel: updatedUser.current_level,
+      newStreak: updatedUser.streak_count,
     });
   } catch (error) {
     next(error);

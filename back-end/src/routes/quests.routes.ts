@@ -166,7 +166,7 @@ const deleteQuest = async (req: Request, res: Response, next: NextFunction) => {
 
     const result = await deleteQuestFromDb(Number(questId), Number(userId));
 
-    if (result.affectedRows === 1) {
+    if ((result as any).affectedRows === 1) {
       res.status(200).json({
         success: true,
         message: "Quest deleted successfully.",

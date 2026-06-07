@@ -1,8 +1,13 @@
 import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import usersRouter from "./routes/users.routes.js";
 import questsRouter from "./routes/quests.routes.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = Number(process.env.PORT) || 30097;
@@ -11,8 +16,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use(express.static(path.join(__dirname, "../dist/frontend-build")));
+
 app.get("/", (_req: Request, res: Response) => {
-  res.send("Hello from Express 5 and TypeScript");
+  res.sendFile(path.join(__dirname, "../dist/frontend-build", "index.html"));
 });
 
 app.use("/users", usersRouter);

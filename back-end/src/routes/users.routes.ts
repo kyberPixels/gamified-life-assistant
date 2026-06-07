@@ -91,7 +91,7 @@ const registerUser = async (
 
     const queryResult = await createUser(username, email, hashedPassword);
 
-    if (queryResult.affectedRows === 1) {
+    if ((queryResult as any).affectedRows === 1) {
       res.status(201).json({
         success: true,
         message: "User registered.",
@@ -126,7 +126,7 @@ const deleteUserAccount = async (
 
     const queryResult = await deleteUser(userId);
 
-    if (queryResult.affectedRows === 1) {
+    if ((queryResult as any).affectedRows === 1) {
       res.status(200).json({
         success: true,
         message: "Character and account successfully deleted from the world.",
@@ -164,7 +164,7 @@ const updateUserAvatar = async (
 
     const queryResult = await updateAvatarInDb(userId, avatarId);
 
-    if (queryResult.affectedRows === 1) {
+    if ((queryResult as any).affectedRows === 1) {
       if (Number(avatarId) === 5) {
         await pool.query(
           "INSERT IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 2)",

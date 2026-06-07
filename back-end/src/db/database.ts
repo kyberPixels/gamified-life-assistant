@@ -40,6 +40,9 @@ export const createUser = async (
 };
 
 export const deleteUser = async (userId: number) => {
+  await pool.query("DELETE FROM user_achievements WHERE user_id = ?", [userId]);
+  await pool.query("DELETE FROM quest_completions WHERE user_id = ?", [userId]);
+  await pool.query("DELETE FROM quests WHERE user_id = ?", [userId]);
   const [result] = await pool.query("DELETE FROM users WHERE id = ?", [userId]);
   return result;
 };

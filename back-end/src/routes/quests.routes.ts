@@ -8,11 +8,14 @@ import { pool } from "../db/database.js";
 
 const router = Router();
 
-const checkAndUnlockAchievements = async (userId: number, currentCategoryName?: string) => {
+const checkAndUnlockAchievements = async (
+  userId: number,
+  currentCategoryName?: string,
+) => {
   try {
     const [totalRows]: any = await pool.query(
       "SELECT COUNT(*) as count FROM quest_completions WHERE user_id = ?",
-      [userId]
+      [userId],
     );
     const totalCompleted = totalRows[0].count;
 
@@ -24,14 +27,14 @@ const checkAndUnlockAchievements = async (userId: number, currentCategoryName?: 
          JOIN quests q ON qc.quest_id = q.id
          JOIN categories c ON q.category_id = c.id
          WHERE qc.user_id = ? AND c.name = ?`,
-        [userId, currentCategoryName]
+        [userId, currentCategoryName],
       );
       categoryCompleted = catRows[0].count;
     }
 
     const [userRows]: any = await pool.query(
       "SELECT current_level FROM users WHERE id = ?",
-      [userId]
+      [userId],
     );
     const currentLevel = userRows[0].current_level;
 
@@ -40,24 +43,27 @@ const checkAndUnlockAchievements = async (userId: number, currentCategoryName?: 
        WHERE id NOT IN (
          SELECT achievement_id FROM user_achievements WHERE user_id = ?
        )`,
-      [userId]
+      [userId],
     );
 
     for (const ach of lockedAchievements) {
       let shouldUnlock = false;
 
       switch (ach.requirement_type) {
-        case 'total_quests':
+        case "total_quests":
           if (totalCompleted >= ach.requirement_value) shouldUnlock = true;
           break;
 
-        case 'category_quests':
-          if (currentCategoryName === ach.category_name && categoryCompleted >= ach.requirement_value) {
+        case "category_quests":
+          if (
+            currentCategoryName === ach.category_name &&
+            categoryCompleted >= ach.requirement_value
+          ) {
             shouldUnlock = true;
           }
           break;
 
-        case 'level':
+        case "level":
           if (currentLevel >= ach.requirement_value) shouldUnlock = true;
           break;
 
@@ -68,7 +74,7 @@ const checkAndUnlockAchievements = async (userId: number, currentCategoryName?: 
       if (shouldUnlock) {
         await pool.query(
           "INSERT IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, ?)",
-          [userId, ach.id]
+          [userId, ach.id],
         );
       }
     }
@@ -207,29 +213,24 @@ const toggleQuestCompletion = async (
         [Number(xpReward), Number(userId)],
       );
 
-      const danasObj = new Date();
-      const danas = danasObj.toISOString().split("T")[0];
-
-      const jucerObj = new Date();
-      jucerObj.setDate(jucerObj.getDate() - 1);
-      const jucer = jucerObj.toISOString().split("T")[0];
-
       const [userRows]: any = await pool.query(
-        "SELECT streak_count, last_activity_date, total_xp, current_level FROM users WHERE id = ?",
+        `SELECT streak_count, 
+                total_xp,
+                DATEDIFF(NOW(), last_activity_date) as days_passed,
+                CASE WHEN last_activity_date IS NULL THEN 1 ELSE 0 END as is_first
+         FROM users WHERE id = ?`,
         [Number(userId)],
       );
       const currentUser = userRows[0];
 
       let currentStreak = currentUser.streak_count || 0;
-      let lastActivity = currentUser.last_activity_date;
+      let daysPassed = currentUser.days_passed;
 
-      if (lastActivity instanceof Date) {
-        lastActivity = lastActivity.toISOString().split("T")[0];
-      }
-
-      if (lastActivity === danas) {
+      if (currentUser.is_first === 1) {
+        newStreak = 1;
+      } else if (daysPassed === 0) {
         newStreak = currentStreak;
-      } else if (lastActivity === jucer) {
+      } else if (daysPassed === 1) {
         newStreak = currentStreak + 1;
       } else {
         newStreak = 1;
@@ -245,23 +246,23 @@ const toggleQuestCompletion = async (
       }
 
       await pool.query(
-        "UPDATE users SET streak_count = ?, last_activity_date = ?, current_level = ? WHERE id = ?",
-        [newStreak, danas, calculatedLevel, Number(userId)],
+        "UPDATE users SET streak_count = ?, last_activity_date = NOW(), current_level = ? WHERE id = ?",
+        [newStreak, calculatedLevel, Number(userId)],
       );
 
       if (isWaterQuest) {
         await pool.query(
           "INSERT IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 1)",
-          [Number(userId), 1]
+          [Number(userId), 1],
         );
       } else {
         const [questCatRows]: any = await pool.query(
           `SELECT c.name FROM quests q 
            JOIN categories c ON q.category_id = c.id 
            WHERE q.id = ?`,
-          [Number(questId)]
+          [Number(questId)],
         );
-        
+
         const categoryName = questCatRows[0]?.name;
         await checkAndUnlockAchievements(Number(userId), categoryName);
       }
@@ -279,10 +280,10 @@ const toggleQuestCompletion = async (
       );
 
       const [userRows]: any = await pool.query(
-        "SELECT total_xp, current_level FROM users WHERE id = ?",
+        "SELECT total_xp FROM users WHERE id = ?",
         [Number(userId)],
       );
-      
+
       let checkXp = userRows[0].total_xp;
       let calculatedLevel = 1;
       let xpNeeded = 100;
@@ -292,10 +293,10 @@ const toggleQuestCompletion = async (
         xpNeeded += 100;
       }
 
-      await pool.query(
-        "UPDATE users SET current_level = ? WHERE id = ?",
-        [calculatedLevel, Number(userId)]
-      );
+      await pool.query("UPDATE users SET current_level = ? WHERE id = ?", [
+        calculatedLevel,
+        Number(userId),
+      ]);
     }
 
     const [finalUserRows]: any = await pool.query(
@@ -317,7 +318,11 @@ const toggleQuestCompletion = async (
   }
 };
 
-const getUserAchievements = async (req: Request, res: Response, next: NextFunction) => {
+const getUserAchievements = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const userId = Number(req.params.userId);
 
@@ -332,7 +337,7 @@ const getUserAchievements = async (req: Request, res: Response, next: NextFuncti
        FROM achievements a
        LEFT JOIN user_achievements ua ON a.id = ua.achievement_id AND ua.user_id = ?
        ORDER BY a.id ASC`,
-      [userId]
+      [userId],
     );
 
     res.status(200).json({ success: true, achievements: rows });

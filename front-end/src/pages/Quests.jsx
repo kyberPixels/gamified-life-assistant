@@ -169,7 +169,7 @@ export default function Quests() {
         </div>
 
         <button type="submit" className="quest-btn submit-quest-btn">
-          Accept Quest 📜
+          🀄 Accept Quest 🀄
         </button>
       </form>
     </div>

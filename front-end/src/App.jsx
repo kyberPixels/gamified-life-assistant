@@ -10,7 +10,6 @@ function App() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
-  // Provjera prijave pri učitavanju aplikacije
   useEffect(() => {
     const loggedInUser = localStorage.getItem('user');
     if (loggedInUser) {
@@ -26,7 +25,6 @@ function App() {
     navigate('/login');
   };
 
-  // Ako korisnik nije ulogovan, sakrij sidebar i prikaži samo auth stranice
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   return (
@@ -40,7 +38,7 @@ function App() {
                 🏠 Dashboard
               </Link>
               <Link to="/quests" className={`nav-item ${location.pathname === '/quests' ? 'active' : ''}`}>
-                ⚔️ Quests
+                🔰 Quests
               </Link>
             </nav>
           </div>

@@ -327,13 +327,13 @@ export default function Dashboard() {
           onClick={() => setActiveTab("quests")}
           className={`retro-tab-btn ${activeTab === "quests" ? "active" : ""}`}
         >
-          ⚔️ Active Quests
+          ⚓ Active Quests
         </button>
         <button
           onClick={() => setActiveTab("completed")}
           className={`retro-tab-btn ${activeTab === "completed" ? "active" : ""}`}
         >
-          🏆 Completed Quests
+          👾 Completed Quests
         </button>
         <button
           onClick={() => setActiveTab("profile")}
@@ -389,9 +389,9 @@ export default function Dashboard() {
                       lineHeight: "1.6",
                     }}
                   >
-                    ⚔️ All quests cleared! Your quest log is empty. <br />
+                    All quests cleared! Your quest log is empty. <br />
                     Head over to the Quest Log to create new challenges and
-                    start conquering! ⚔️
+                    start conquering! ...
                   </p>
                 </div>
               ) : (
@@ -457,9 +457,9 @@ export default function Dashboard() {
                       lineHeight: "1.6",
                     }}
                   >
-                    🏆 Your Hall of Fame is currently empty. <br />
+                    Your Hall of Fame is currently empty. <br />
                     Complete some active quests to fill up your archive of
-                    achievements! 🏆
+                    achievements! ...
                   </p>
                 </div>
               ) : (

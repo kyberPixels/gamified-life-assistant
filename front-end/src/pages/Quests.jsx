@@ -4,7 +4,6 @@ import { Icon } from "./EmojiToImage";
 
 export default function Quests() {
   const [user, setUser] = useState(null);
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState(1);
@@ -66,15 +65,25 @@ export default function Quests() {
     return "#2196F3";
   };
 
+  const categoryIcons = {
+    1: "❤️",
+    2: "🧡",
+    3: "💛",
+    4: "💚",
+    5: "💙"
+  };
+
   if (!user) return <p className="text-wheat">Loading Quest Log...</p>;
 
   return (
     <div className="quest-log-container">
-      <h2 className="quests-header">⚔️ Quest Log ⚔️</h2>
+      <h2 className="quests-header" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "15px" }}>
+        <Icon name="🛹" size="50px" /> <span>Quest Log</span> <Icon name="🛹" size="50px" />
+      </h2>
 
       <form onSubmit={handleAddQuest} className="quest-form">
         <h3>Create New Quest</h3>
-        
+
         <div className="form-group">
           <label>Quest Title:</label>
           <input
@@ -101,24 +110,30 @@ export default function Quests() {
         <div className="form-flex-row">
           <div className="form-group flex-1">
             <label>Category:</label>
-            <select
-              className="quest-input retro-select"
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-            >
-              <option value="1">⚔️ General</option>
-              <option value="2">❤️ Health & Fitness</option>
-              <option value="3">📚 Study & Coding</option>
-              <option value="4">⏰ Daily Habits</option>
-              <option value="5">🎨 Hobbies & Creativity</option>
-            </select>
+            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <div style={{ position: "absolute", left: "10px", pointerEvents: "none", display: "flex", alignItems: "center" }}>
+                <Icon name={categoryIcons[categoryId]} size="18px" />
+              </div>
+              <select
+                className="quest-input"
+                value={categoryId}
+                onChange={(e) => setCategoryId(Number(e.target.value))}
+                style={{ fontFamily: '"Geo", sans-serif', paddingLeft: "35px", width: "100%" }}
+              >
+                <option value="1">General</option>
+                <option value="2">Health & Fitness</option>
+                <option value="3">Study & Coding</option>
+                <option value="4">Daily Habits</option>
+                <option value="5">Hobbies & Creativity</option>
+              </select>
+            </div>
           </div>
 
           <div className="form-group flex-1">
             <label>Difficulty:</label>
             <select
-              className="quest-input retro-select"
-              style={{ color: getDifficultyColor(difficulty) }}
+              className="quest-input"
+              style={{ color: getDifficultyColor(difficulty), fontFamily: '"Geo", sans-serif' }}
               value={difficulty}
               onChange={(e) => {
                 const selected = e.target.value;
@@ -151,7 +166,7 @@ export default function Quests() {
           {customXp ? (
             <input
               className="quest-input"
-              style={{ color: getDifficultyColor(difficulty) }}
+              style={{ color: getDifficultyColor(difficulty), fontFamily: '"Geo", sans-serif' }}
               type="number"
               value={xp}
               onChange={(e) => setXp(Number(e.target.value))}
@@ -160,8 +175,8 @@ export default function Quests() {
               required
             />
           ) : (
-            <div 
-              className="quest-input static-xp-display" 
+            <div
+              className="quest-input static-xp-display"
               style={{ color: getDifficultyColor(difficulty) }}
             >
               <span>{xp} XP</span>
@@ -169,8 +184,8 @@ export default function Quests() {
           )}
         </div>
 
-        <button type="submit" className="quest-btn submit-quest-btn">
-          🀄 Accept Quest 🀄
+        <button type="submit" className="quest-btn submit-quest-btn" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+          <Icon name="🀄" size="32px" /> <span>Accept Quest</span> <Icon name="🀄" size="32px" />
         </button>
       </form>
     </div>

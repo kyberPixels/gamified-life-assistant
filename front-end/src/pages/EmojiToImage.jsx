@@ -16,6 +16,13 @@ import door from "../assets/emojis/door.jpg";
 import logo from "../assets/emojis/life_rpg.png";
 import quests from "../assets/emojis/Quests.png";
 import dashboard from "../assets/emojis/Dashboard.png";
+import quest_log from "../assets/emojis/quest_log.png";
+
+import category_1 from "../assets/emojis/category_1.png";
+import category_2 from "../assets/emojis/category_2.png";
+import category_3 from "../assets/emojis/category_3.png";
+import category_4 from "../assets/emojis/category_4.png";
+import category_5 from "../assets/emojis/category_5.png";
 
 const emojiMap = {
   "🏆": trophy,
@@ -34,6 +41,12 @@ const emojiMap = {
   "🚪": door,
   "🏠": quests,
   "🔰": dashboard,
+  "🛹": quest_log,
+  "❤️": category_1,
+  "🧡": category_2,
+  "💛": category_3,
+  "💚": category_4,
+  "💙": category_5,
   LIFE_RPG_LOGO: logo,
 };
 

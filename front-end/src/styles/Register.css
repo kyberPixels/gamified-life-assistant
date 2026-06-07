@@ -54,7 +54,7 @@
   font-weight: bold;
   border: 2px solid var(--color-black);
   cursor: pointer;
-  box-shadow: 4px 4px 0px var(--color-wheat);
+  box-shadow: 4px 4px 0px var(--color-black);
   margin-top: 10px;
 }
 

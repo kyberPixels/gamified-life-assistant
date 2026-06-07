@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Icon } from "./EmojiToImage";
 
 const images = import.meta.glob("../assets/achievements/*.jpg", {
   eager: true,
@@ -132,7 +133,15 @@ export default function Achievements({ userId }) {
                     : "var(--color-carmine)",
                 }}
               >
-                {selectedAchievement.unlocked ? "🏆 UNLOCKED!" : "🔒 LOCKED"}
+                {selectedAchievement.unlocked ? (
+                  <>
+                    <Icon name="🏆" size="18px" /> UNLOCKED!
+                  </>
+                ) : (
+                  <>
+                    <Icon name="🔒" size="18px" /> LOCKED
+                  </>
+                )}
               </span>
             </p>
 

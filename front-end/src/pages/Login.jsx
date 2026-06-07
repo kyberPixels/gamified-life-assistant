@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../styles/Login.css';
+import { Icon } from "./EmojiToImage";
 
 export default function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
@@ -39,7 +40,11 @@ export default function Login({ onLoginSuccess }) {
         <h2 style={{ textAlign: 'center', marginBottom: '5px' }}>Welcome back!</h2>
         <p style={{ textAlign: 'center', color: 'var(--color-powder-blue)', marginBottom: '20px' }}>Gate of Login</p>
         
-        {error && <p style={{ color: 'var(--color-wheat)', textAlign: 'center', marginBottom: '10px' }}>⚠️ {error}</p>}
+        {error && (
+          <p style={{ color: 'var(--color-wheat)', textAlign: 'center', marginBottom: '10px' }}>
+            <Icon name="⚠️" size="16px" /> {error}
+          </p>
+        )}
         
         <form onSubmit={handleLogin}>
           <div className="input-group">
@@ -61,7 +66,9 @@ export default function Login({ onLoginSuccess }) {
             />
           </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-            <button type="submit" className="auth-submit" style={{ flex: 1 }}>Login 🗝️</button>
+            <button type="submit" className="auth-submit" style={{ flex: 1 }}>
+              Login <Icon name="🗝️" size="28px" />
+            </button>
             <button type="button" className="auth-submit" style={{ flex: 1, backgroundColor: 'transparent', border: '2px solid var(--color-wheat)' }} onClick={() => navigate('/register')}>Register</button>
           </div>
         </form>

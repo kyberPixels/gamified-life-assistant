@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import "../styles/Dashboard.css";
 import Achievements from "../pages/Achievements";
+import { Icon } from "./EmojiToImage";
 
 import icon1 from "../assets/icons/1.jpg";
 import icon2 from "../assets/icons/2.jpg";
@@ -303,15 +304,14 @@ export default function Dashboard() {
     <div>
       <div className="dashboard-header">
         <h1>
-          Hero Dashboard
+          Hero Dashboard{" "}
           {randomMessage && (
             <span className="dashboard-motivation">({randomMessage})</span>
           )}
         </h1>
         <div>
           <span>
-            Welcome, <strong className="text-wheat">{user.username}</strong>
-            !{" "}
+            Welcome, <strong className="text-wheat">{user.username}</strong>!{" "}
           </span>
         </div>
       </div>
@@ -321,25 +321,25 @@ export default function Dashboard() {
           onClick={() => setActiveTab("home")}
           className={`retro-tab-btn ${activeTab === "home" ? "active" : ""}`}
         >
-          📜 Status
+          <Icon name="📜" size="50px" /> Status
         </button>
         <button
           onClick={() => setActiveTab("quests")}
           className={`retro-tab-btn ${activeTab === "quests" ? "active" : ""}`}
         >
-          ⚓ Active Quests
+          <Icon name="⚓" size="50px" /> Active Quests
         </button>
         <button
           onClick={() => setActiveTab("completed")}
           className={`retro-tab-btn ${activeTab === "completed" ? "active" : ""}`}
         >
-          👾 Completed Quests
+          <Icon name="👾" size="50px" /> Completed Quests
         </button>
         <button
           onClick={() => setActiveTab("profile")}
           className={`retro-tab-btn ${activeTab === "profile" ? "active" : ""}`}
         >
-          👤 Profile Sheet
+          <Icon name="👤" size="50px" /> Profile Sheet
         </button>
       </nav>
 
@@ -369,7 +369,9 @@ export default function Dashboard() {
               </div>
               <div className="dashboard-card">
                 <h3>STREAK</h3>
-                <p>🔥 {user.streak_count || 0} Days</p>
+                <p>
+                  <Icon name="🔥" size="35px" /> {user.streak_count || 0} Days
+                </p>
               </div>
             </div>
           </div>
@@ -425,7 +427,7 @@ export default function Dashboard() {
                         }
                         className="quest-btn complete-toggle-btn status-complete"
                       >
-                        Complete ⚔️
+                        Complete <Icon name="⚔️" size="16px" />
                       </button>
 
                       <button
@@ -433,7 +435,7 @@ export default function Dashboard() {
                         className="quest-delete-btn"
                         title="Abandon Quest"
                       >
-                        ❌
+                        <Icon name="❌" size="30px" />
                       </button>
                     </div>
                   </div>
@@ -493,7 +495,7 @@ export default function Dashboard() {
                         }
                         className="quest-btn complete-toggle-btn status-undo"
                       >
-                        Undo ✅
+                        Undo <Icon name="✅" size="25px" />
                       </button>
                     </div>
                   </div>
@@ -537,7 +539,7 @@ export default function Dashboard() {
                 onClick={handleDeleteAccount}
                 className="retro-btn-danger"
               >
-                💀 Kill Character 💀
+                <Icon name="💀" size="22px" /> Kill Character <Icon name="💀" size="22px" />
               </button>
             </div>
 

@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Quests from './pages/Quests';
+import { Icon } from "./pages/EmojiToImage";
 
 function App() {
   const location = useLocation();
@@ -31,20 +32,30 @@ function App() {
     <div className="app-layout">
       {!isAuthPage && user && (
         <aside className="sidebar">
-          <div className="logo-section">
-            <h2>LIFE RPG 🎮</h2>
+          
+          <div className="sidebar-main-nav-wrapper" style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+            
+            <div className="logo-section">
+              <div className="sidebar-logo">
+                <Icon name="LIFE_RPG_LOGO" alt="Life RPG Logo" />
+              </div>
+            </div>
+
             <nav className="nav-links">
               <Link to="/" className={`nav-item ${location.pathname === '/' ? 'active' : ''}`}>
-                🏠 Dashboard
+                <Icon name="🔰" size="50px" /> Dashboard
               </Link>
               <Link to="/quests" className={`nav-item ${location.pathname === '/quests' ? 'active' : ''}`}>
-                🔰 Quests
+                <Icon name="🏠" size="50px" /> Quests
               </Link>
             </nav>
+
           </div>
+
+          {/* FOOTER OSTAJE ZAKUCAN NA DNU */}
           <div className="sidebar-footer">
             <button onClick={handleLogout} className="logout-btn">
-              Logout 🚪
+              Logout <Icon name="🚪" size="36px" />
             </button>
             <div className="version-info">
               v1.0.0 MVP

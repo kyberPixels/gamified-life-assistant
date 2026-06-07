@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Quests.css";
+import { Icon } from "./EmojiToImage";
 
 export default function Quests() {
   const [user, setUser] = useState(null);
